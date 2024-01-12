@@ -1,0 +1,26 @@
+//@version=5
+strategy("Morning Star/Evening Star with 1:3 RR", overlay=true)
+
+max_quantity = math.floor(strategy.equity / close)
+
+is_first_candle_bullish = close[2] > open[2]
+first_candle_body_height = math.abs(close[2] - open[2])
+first_candle_shadow_and_body_height = high[2] - low[2]
+second_candle_body_height = math.abs(close[1] - open[1])
+second_candle_shadow_and_body_height = high[1] - low[1]
+is_current_candle_bullish = close > open
+
+is_morning_star = not is_first_candle_bullish and (first_candle_body_height > (first_candle_shadow_and_body_height * 0.9)) and first_candle_body_height > 1 and (second_candle_body_height/second_candle_shadow_and_body_height < 0.4) and is_current_candle_bullish and (close > (close[2] + first_candle_body_height/2))
+is_evening_star = is_first_candle_bullish and (first_candle_body_height > (first_candle_shadow_and_body_height * 0.9)) and first_candle_body_height > 1 and (second_candle_body_height/second_candle_shadow_and_body_height < 0.4) and not is_current_candle_bullish and (close < (close[2] - first_candle_body_height/2))
+
+if (is_morning_star and strategy.opentrades == 0)
+    strategy.entry("Long", strategy.long, max_quantity)
+    strategy.exit("exit", from_entry="Long", limit=close*1.03, stop=close*0.99)
+else if (is_evening_star and strategy.opentrades == 0)
+    strategy.entry("Short", strategy.short, max_quantity)
+    strategy.exit("exit", from_entry="Short", limit=close*0.97, stop=close*1.01)
+  
+plot(series=(strategy.position_size > 0) ? strategy.opentrades.entry_price(0)*1.03 : na, color=color.green, style=plot.style_linebr, linewidth=5, title="Take Profit")
+plot(series=(strategy.position_size > 0) ? strategy.opentrades.entry_price(0)*0.99 : na, color=color.red, style=plot.style_linebr, linewidth=5, title="Stop Loss")
+plot(series=(strategy.position_size < 0) ? strategy.opentrades.entry_price(0)*0.97 : na, color=color.green, style=plot.style_linebr, linewidth=5, title="Take Profit")
+plot(series=(strategy.position_size < 0) ? strategy.opentrades.entry_price(0)*1.01 : na, color=color.red, style=plot.style_linebr, linewidth=5, title="Stop Loss")

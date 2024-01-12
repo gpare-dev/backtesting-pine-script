@@ -1,0 +1,24 @@
+//@version=5
+strategy("Engulfing with 1:3 RR", overlay=true)
+
+max_quantity = math.floor(strategy.equity / close)
+
+is_previous_candle_bullish = close[1] > open[1]
+previous_body_height = math.abs(close[1] - open[1])
+is_current_candle_bullish = close > open
+current_body_height = math.abs(close - open)
+
+is_bullish_engulfing = (current_body_height > (previous_body_height * 3)) and (not is_previous_candle_bullish and is_current_candle_bullish)
+is_bearish_engulfing = (current_body_height > (previous_body_height * 3)) and (is_previous_candle_bullish and not is_current_candle_bullish)
+
+if (is_bullish_engulfing and strategy.opentrades == 0)
+    strategy.entry("Long", strategy.long, max_quantity)
+    strategy.exit("exit", from_entry="Long", limit=close*1.03, stop=close*0.99)
+else if (is_bearish_engulfing and strategy.opentrades == 0)
+    strategy.entry("Short", strategy.short, max_quantity)
+    strategy.exit("exit", from_entry="Short", limit=close*0.97, stop=close*1.01)
+  
+plot(series=(strategy.position_size > 0) ? strategy.opentrades.entry_price(0)*1.03 : na, color=color.green, style=plot.style_linebr, linewidth=5, title="Take Profit")
+plot(series=(strategy.position_size > 0) ? strategy.opentrades.entry_price(0)*0.99 : na, color=color.red, style=plot.style_linebr, linewidth=5, title="Stop Loss")
+plot(series=(strategy.position_size < 0) ? strategy.opentrades.entry_price(0)*0.97 : na, color=color.green, style=plot.style_linebr, linewidth=5, title="Take Profit")
+plot(series=(strategy.position_size < 0) ? strategy.opentrades.entry_price(0)*1.01 : na, color=color.red, style=plot.style_linebr, linewidth=5, title="Stop Loss")

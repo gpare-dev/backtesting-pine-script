@@ -1,0 +1,30 @@
+//@version=5
+strategy("Tweezer with 1:3 RR", overlay=true)
+
+max_quantity = math.floor(strategy.equity / close)
+
+isPreviousCandleBullish = close[1] > open[1]
+previousBodyHeight = math.abs(close[1] - open[1])
+previousShadowAndBodyHeight = high[1] - low[1]
+isCurrentCandleBullish = close > open
+currentBodyHeight = math.abs(close - open)
+currentShadowAndBodyHeight = high - low
+bodyRatio = previousBodyHeight/currentBodyHeight
+shadowAndBodyRatio = previousShadowAndBodyHeight/currentShadowAndBodyHeight
+highDifference = math.abs(high[1] - high)
+lowDifference = math.abs(low[1] - low)
+
+is_tweezer_bottom = (bodyRatio >= 0.9 and bodyRatio <= 1.1 and shadowAndBodyRatio >= 0.9 and shadowAndBodyRatio <= 1.1 and lowDifference <= 0.10) and (not isPreviousCandleBullish and isCurrentCandleBullish)
+is_tweezer_top = (bodyRatio >= 0.9 and bodyRatio <= 1.1 and shadowAndBodyRatio >= 0.9 and shadowAndBodyRatio <= 1.1 and highDifference <= 0.10) and (isPreviousCandleBullish and not isCurrentCandleBullish)
+
+if (is_tweezer_bottom and strategy.opentrades == 0)
+    strategy.entry("Long", strategy.long, max_quantity)
+    strategy.exit("exit", from_entry="Long", limit=close*1.03, stop=close*0.99)
+else if (is_tweezer_top and strategy.opentrades == 0)
+    strategy.entry("Short", strategy.short, max_quantity)
+    strategy.exit("exit", from_entry="Short", limit=close*0.97, stop=close*1.01)
+  
+plot(series=(strategy.position_size > 0) ? strategy.opentrades.entry_price(0)*1.03 : na, color=color.green, style=plot.style_linebr, linewidth=5, title="Take Profit")
+plot(series=(strategy.position_size > 0) ? strategy.opentrades.entry_price(0)*0.99 : na, color=color.red, style=plot.style_linebr, linewidth=5, title="Stop Loss")
+plot(series=(strategy.position_size < 0) ? strategy.opentrades.entry_price(0)*0.97 : na, color=color.green, style=plot.style_linebr, linewidth=5, title="Take Profit")
+plot(series=(strategy.position_size < 0) ? strategy.opentrades.entry_price(0)*1.01 : na, color=color.red, style=plot.style_linebr, linewidth=5, title="Stop Loss")

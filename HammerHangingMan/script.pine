@@ -1,0 +1,19 @@
+//@version=5
+strategy("Hammer/Hanging Man with 1:3 RR", overlay=true)
+
+max_quantity = math.floor(strategy.equity / close)
+
+is_hammer =  (close > open) and (((close-open) * 3) < (high-low)) and (((high-close) * 5) < (high-low)) and (close < close[1] and close < close[2]) and open[1] > close[1] and open[2] > close[2]
+is_hanging_man = (open > close) and (((open-close) * 3) < (high-low)) and (((high-open) * 5) < (high-low)) and (close > close[1] and close > close[2]) and open[1] < close[1] and open[2] < close[2]
+
+if (is_hammer and strategy.opentrades == 0)
+    strategy.entry("Long", strategy.long, max_quantity)
+    strategy.exit("exit", from_entry="Long", limit=close*1.03, stop=close*0.99)
+else if (is_hanging_man and strategy.opentrades == 0)
+    strategy.entry("Short", strategy.short, max_quantity)
+    strategy.exit("exit", from_entry="Short", limit=close*0.97, stop=close*1.01)
+  
+plot(series=(strategy.position_size > 0) ? strategy.opentrades.entry_price(0)*1.03 : na, color=color.green, style=plot.style_linebr, linewidth=5, title="Take Profit")
+plot(series=(strategy.position_size > 0) ? strategy.opentrades.entry_price(0)*0.99 : na, color=color.red, style=plot.style_linebr, linewidth=5, title="Stop Loss")
+plot(series=(strategy.position_size < 0) ? strategy.opentrades.entry_price(0)*0.97 : na, color=color.green, style=plot.style_linebr, linewidth=5, title="Take Profit")
+plot(series=(strategy.position_size < 0) ? strategy.opentrades.entry_price(0)*1.01 : na, color=color.red, style=plot.style_linebr, linewidth=5, title="Stop Loss")
